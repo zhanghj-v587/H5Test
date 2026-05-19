@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#ff9a9e">
+    <title>智行待办 · 优雅清单</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #fecfef 50%, #fbc2eb 75%, #a6c1ee 100%);
+            background-size: 400% 400%;
+            animation: romanticGradient 8s ease infinite;
+            font-family: 'Segoe UI', 'Roboto', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 182, 193, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(221, 160, 221, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 218, 233, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 60% 60%, rgba(255, 192, 203, 0.2) 0%, transparent 40%);
+            pointer-events: none;
+            animation: floatBubbles 12s ease-in-out infinite;
+        }
+
+        .petals-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .petal {
+            position: absolute;
+            top: -30px;
+            font-size: 24px;
+            opacity: 0.7;
+            animation: petalFall linear infinite;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes petalFall {
+            0% {
+                transform: translateY(0) rotate(0deg) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.7;
+            }
+            90% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        .todo-card {
+            max-width: 680px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .todo-header {
+            background: linear-gradient(135deg, #fff5ff 0%, #f0f9ff 100%);
+            padding: 2rem 2rem 1.5rem 2rem;
+            border-bottom: none;
+            position: relative;
+        }
+
+        .todo-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #ff9a9e, #fecfef, #fbc2eb, #a6c1ee, #ff9a9e);
+            background-size: 300% 100%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        .todo-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ec4899 0%, #f472b6 50%, #db2777 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .todo-header h1::before {
+            content: "✓";
+            font-size: 2rem;
+            color: #ec4899;
+            font-weight: 600;
+        }
+
+        .sub {
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-top: 0.6rem;
+            border-left: 3px solid #764ba2;
+            padding-left: 0.8rem;
+            font-weight: 500;
+        }
+
+        .add-section {
+            padding: 1.5rem 2rem 1rem 2rem;
+            background: white;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7ff 0%, #fff5ff 100%);
+            border-radius: 50px;
+            padding: 0.3rem 0.3rem 0.3rem 1.3rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .input-group:focus-within {
+            border-color: #764ba2;
+            box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.15);
+            background: white;
+            transform: translateY(-2px);
+        }
+
+        .input-group input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            font-size: 1rem;
+            padding: 0.9rem 0;
+            outline: none;
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .input-group input::placeholder {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 0.75rem 1.6rem;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+
+        .add-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 2rem 0.8rem 2rem;
+            background: linear-gradient(135deg, #fafbff 0%, #fffaff 100%);
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.85rem;
+            color: #4b5563;
+        }
+
+        .counter {
+            background: linear-gradient(135deg, #eef2ff 0%, #f3e8ff 100%);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #764ba2;
+        }
+
+        .clear-done-btn {
+            background: linear-gradient(135deg, #fef2f2 0%, #fff1f2 100%);
+            border: 1px solid #fecaca;
+            padding: 0.4rem 1.1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #dc2626;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-done-btn:hover {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+        }
+
+        .todo-list-container {
+            background: #ffffff;
+            max-height: 450px;
+            overflow-y: auto;
+            padding: 0.3rem 0;
+        }
+
+        .todo-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 1.1rem 2rem;
+            border-bottom: 1px solid #f9fafb;
+            transition: all 0.2s ease;
+            animation: slideIn 0.3s ease;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .todo-item:hover {
+            background: linear-gradient(135deg, #fafbff 0%, #fffaff 100%);
+            transform: translateX(4px);
+        }
+
+        .todo-item.dragging {
+            opacity: 0.5;
+            transform: scale(1.02) rotate(1deg);
+            cursor: grabbing;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .todo-item.drag-over {
+            border-top: 3px solid #ec4899;
+            padding-top: calc(1.1rem - 3px);
+        }
+
+        .todo-check {
+            width: 1.4rem;
+            height: 1.4rem;
+            cursor: pointer;
+            accent-color: #764ba2;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .todo-check:hover {
+            transform: scale(1.1);
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #374151;
+            word-break: break-word;
+            padding-right: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #9ca3af;
+            font-weight: 450;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            font-size: 1.3rem;
+            cursor: pointer;
+            color: #d1d5db;
+            padding: 6px 8px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            opacity: 0;
+        }
+
+        .todo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            color: #ef4444;
+            background: #fef2f2;
+            transform: scale(1.1);
+        }
+
+        .empty-placeholder {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6b7280;
+            font-size: 1rem;
+            background: #ffffff;
+        }
+
+        .empty-placeholder p:first-child {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.6;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .todo-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .todo-list-container::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 10px;
+        }
+
+        .todo-list-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        @keyframes romanticGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        @keyframes floatBubbles {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(30px, -30px) rotate(5deg); }
+            66% { transform: translate(-20px, 20px) rotate(-5deg); }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        footer {
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, #fafbff 0%, #fffaff 100%);
+            border-top: 1px solid #f3f4f6;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 1rem;
+            }
+            .todo-card {
+                border-radius: 20px;
+            }
+            .todo-header {
+                padding: 1.5rem 1.5rem 1.2rem 1.5rem;
+            }
+            .todo-header h1 {
+                font-size: 1.6rem;
+            }
+            .add-section {
+                padding: 1.2rem 1.5rem 0.8rem 1.5rem;
+            }
+            .input-group {
+                padding-left: 1rem;
+            }
+            .add-btn {
+                padding: 0.65rem 1.3rem;
+            }
+            .todo-item {
+                padding: 1rem 1.5rem;
+            }
+            .stats-bar {
+                padding: 0.7rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="petals-container" id="petalsContainer"></div>
+<div class="todo-card">
+    <div class="todo-header">
+        <h1>下一步待办</h1>
+        <div class="sub">✔️ 勾选已完成 · ✖️ 去除做过的事</div>
+    </div>
+
+    <div class="add-section">
+        <div class="input-group">
+            <input type="text" id="taskInput" placeholder="写下下一步需要做的事情..." autocomplete="off">
+            <button class="add-btn" id="addTaskBtn">+ 添加</button>
+        </div>
+    </div>
+
+    <div class="stats-bar">
+        <span>📋 任务清单</span>
+        <span><span id="pendingCount">0</span> 项待办 · 总计 <span id="totalCount">0</span></span>
+        <button class="clear-done-btn" id="clearCompletedBtn">✓ 清除已完成</button>
+    </div>
+
+    <div class="todo-list-container">
+        <ul class="todo-list" id="todoList">
+        </ul>
+    </div>
+    <footer>
+        ⚡ 点击复选框标记「下一步要做」的状态 | 每项均可单独「去除」
+    </footer>
+</div>
+
+<script>
+    let tasks = [];
+
+    const todoListEl = document.getElementById('todoList');
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addTaskBtn');
+    const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+    const pendingCountSpan = document.getElementById('pendingCount');
+    const totalCountSpan = document.getElementById('totalCount');
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function saveTasksToLocal() {
+        localStorage.setItem('smartTodoList', JSON.stringify(tasks));
+    }
+
+    function loadTasksFromLocal() {
+        const stored = localStorage.getItem('smartTodoList');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    tasks = parsed;
+                    return;
+                }
+            } catch(e) { console.warn(e); }
+        }
+        tasks = [
+            { id: Date.now() + 1, text: "完成待办页面核心功能", completed: false },
+            { id: Date.now() + 2, text: "调研项目需求文档", completed: false },
+            { id: Date.now() + 3, text: "下午3点会议准备", completed: true },
+            { id: Date.now() + 4, text: "阅读一篇技术文章", completed: false },
+            { id: Date.now() + 5, text: "回顾已完成的任务 (可清除)", completed: true }
+        ];
+    }
+
+    function updateStats() {
+        const total = tasks.length;
+        const pending = tasks.filter(t => !t.completed).length;
+        totalCountSpan.innerText = total;
+        pendingCountSpan.innerText = pending;
+    }
+
+    function renderTodoList() {
+        if (!todoListEl) return;
+
+        todoListEl.innerHTML = '';
+
+        if (tasks.length === 0) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-placeholder';
+            emptyDiv.innerHTML = `
+                <p>🎯✨</p>
+                <p>暂时没有待办事项</p>
+                <p style="font-size:0.85rem; margin-top:10px; opacity:0.8;">添加一项「下一步要做的事情」吧</p>
+            `;
+            todoListEl.appendChild(emptyDiv);
+            updateStats();
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        tasks.forEach(task => {
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+            if (task.completed) {
+                li.classList.add('completed');
+            }
+            li.setAttribute('data-id', task.id);
+            li.draggable = true;
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'todo-check';
+            checkbox.checked = task.completed;
+            checkbox.setAttribute('data-id', task.id);
+
+            const textSpan = document.createElement('span');
+            textSpan.className = 'todo-text';
+            textSpan.innerText = task.text;
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'delete-btn';
+            delBtn.setAttribute('data-id', task.id);
+            delBtn.setAttribute('aria-label', '删除任务');
+            delBtn.innerHTML = '🗑️';
+            delBtn.title = '去除这件事';
+
+            li.appendChild(checkbox);
+            li.appendChild(textSpan);
+            li.appendChild(delBtn);
+            fragment.appendChild(li);
+        });
+
+        todoListEl.appendChild(fragment);
+        updateStats();
+    }
+
+    function addNewTask() {
+        let rawText = taskInput.value.trim();
+        if (rawText === "") {
+            taskInput.placeholder = "内容不能为空 ✍️";
+            taskInput.style.borderColor = "#f97316";
+            setTimeout(() => {
+                taskInput.placeholder = "写下下一步需要做的事情...";
+                taskInput.style.borderColor = "";
+            }, 1200);
+            taskInput.focus();
+            return;
+        }
+        const newTask = {
+            id: Date.now() + Math.floor(Math.random() * 10000),
+            text: rawText,
+            completed: false
+        };
+        tasks.push(newTask);
+        saveTasksToLocal();
+        renderTodoList();
+        taskInput.value = "";
+        taskInput.focus();
+    }
+
+    function toggleComplete(taskId) {
+        const task = tasks.find(t => t.id == taskId);
+        if (task) {
+            task.completed = !task.completed;
+            saveTasksToLocal();
+            renderTodoList();
+        }
+    }
+
+    function deleteTaskById(taskId) {
+        const newTasks = tasks.filter(t => t.id != taskId);
+        tasks = newTasks;
+        saveTasksToLocal();
+        renderTodoList();
+    }
+
+    function clearCompletedTasks() {
+        const hasCompleted = tasks.some(t => t.completed === true);
+        if (!hasCompleted) {
+            const tempMsg = clearCompletedBtn;
+            const originalText = tempMsg.innerText;
+            tempMsg.innerText = '✨ 暂无已完成任务';
+            setTimeout(() => {
+                tempMsg.innerText = originalText;
+            }, 800);
+            return;
+        }
+        tasks = tasks.filter(t => !t.completed);
+        saveTasksToLocal();
+        renderTodoList();
+    }
+
+    function setupEventDelegation() {
+        const container = document.querySelector('.todo-list-container');
+        if (!container) return;
+
+        container.addEventListener('change', (e) => {
+            const target = e.target;
+            if (target.classList && target.classList.contains('todo-check')) {
+                const taskId = target.getAttribute('data-id');
+                if (taskId) {
+                    toggleComplete(taskId);
+                }
+                e.stopPropagation();
+            }
+        });
+
+        container.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList && target.classList.contains('delete-btn')) {
+                const taskId = target.getAttribute('data-id');
+                if (taskId) {
+                    deleteTaskById(taskId);
+                }
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    }
+
+    let draggedElement = null;
+    let draggedIndex = null;
+
+    function setupDragAndDrop() {
+        const listContainer = document.querySelector('.todo-list');
+        if (!listContainer) return;
+
+        listContainer.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('todo-item')) {
+                draggedElement = e.target;
+                draggedIndex = tasks.findIndex(t => t.id == draggedElement.getAttribute('data-id'));
+                setTimeout(() => {
+                    draggedElement.classList.add('dragging');
+                }, 0);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', draggedElement.getAttribute('data-id'));
+            }
+        });
+
+        listContainer.addEventListener('dragend', (e) => {
+            if (e.target.classList.contains('todo-item')) {
+                e.target.classList.remove('dragging');
+                draggedElement = null;
+                draggedIndex = null;
+                document.querySelectorAll('.todo-item').forEach(item => {
+                    item.classList.remove('drag-over');
+                });
+            }
+        });
+
+        listContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const afterElement = getDragAfterElement(listContainer, e.clientY);
+            if (afterElement && afterElement !== draggedElement) {
+                afterElement.classList.add('drag-over');
+                document.querySelectorAll('.todo-item').forEach(item => {
+                    if (item !== afterElement) {
+                        item.classList.remove('drag-over');
+                    }
+                });
+            }
+        });
+
+        listContainer.addEventListener('dragleave', (e) => {
+            if (e.target.classList.contains('todo-item')) {
+                e.target.classList.remove('drag-over');
+            }
+        });
+
+        listContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(listContainer, e.clientY);
+            
+            if (draggedElement && draggedIndex !== null) {
+                const [movedTask] = tasks.splice(draggedIndex, 1);
+                
+                if (afterElement) {
+                    afterElement.classList.remove('drag-over');
+                    const newIndex = tasks.findIndex(t => t.id == afterElement.getAttribute('data-id'));
+                    tasks.splice(newIndex, 0, movedTask);
+                } else {
+                    tasks.push(movedTask);
+                }
+                
+                saveTasksToLocal();
+                renderTodoList();
+            }
+        });
+    }
+
+    function getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.todo-item:not(.dragging)')];
+        
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function bindEnterKey() {
+        if (taskInput) {
+            taskInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addNewTask();
+                }
+            });
+        }
+    }
+
+    function bindClearButton() {
+        if (clearCompletedBtn) {
+            clearCompletedBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                clearCompletedTasks();
+            });
+        }
+    }
+
+    function bindAddButton() {
+        if (addBtn) {
+            addBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                addNewTask();
+            });
+        }
+    }
+
+    function createPetals() {
+        const petalsContainer = document.getElementById('petalsContainer');
+        if (!petalsContainer) return;
+
+        const petalEmojis = ['🌸', '💗', '🌷', '💫', '✨', '🦋', '💖'];
+        const petalCount = 20;
+
+        for (let i = 0; i < petalCount; i++) {
+            setTimeout(() => {
+                const petal = document.createElement('div');
+                petal.className = 'petal';
+                petal.innerText = petalEmojis[Math.floor(Math.random() * petalEmojis.length)];
+                petal.style.left = Math.random() * 100 + 'vw';
+                petal.style.fontSize = (Math.random() * 16 + 14) + 'px';
+                petal.style.animationDuration = (Math.random() * 5 + 8) + 's';
+                petal.style.animationDelay = (Math.random() * 2) + 's';
+                
+                const swayAmount = Math.random() * 60 - 30;
+                petal.style.animationName = 'petalFallCustom';
+                petal.style.setProperty('--sway-x', swayAmount + 'px');
+                
+                if (!document.getElementById('petalFallCustomStyle')) {
+                    const style = document.createElement('style');
+                    style.id = 'petalFallCustomStyle';
+                    style.textContent = `
+                        @keyframes petalFallCustom {
+                            0% {
+                                transform: translateY(0) rotate(0deg) translateX(0);
+                                opacity: 0;
+                            }
+                            10% {
+                                opacity: 0.8;
+                            }
+                            90% {
+                                opacity: 0.8;
+                            }
+                            100% {
+                                transform: translateY(110vh) rotate(720deg) translateX(var(--sway-x, 50px));
+                                opacity: 0;
+                            }
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+                
+                petalsContainer.appendChild(petal);
+                
+                petal.addEventListener('animationend', () => {
+                    petal.remove();
+                    if (Math.random() > 0.3) {
+                        setTimeout(() => createSinglePetal(), Math.random() * 2000);
+                    }
+                });
+            }, i * 400);
+        }
+    }
+
+    function createSinglePetal() {
+        const petalsContainer = document.getElementById('petalsContainer');
+        if (!petalsContainer) return;
+
+        const petalEmojis = ['🌸', '💗', '🌷', '💫', '✨', '🦋', '💖'];
+        const petal = document.createElement('div');
+        petal.className = 'petal';
+        petal.innerText = petalEmojis[Math.floor(Math.random() * petalEmojis.length)];
+        petal.style.left = Math.random() * 100 + 'vw';
+        petal.style.fontSize = (Math.random() * 16 + 14) + 'px';
+        petal.style.animationDuration = (Math.random() * 5 + 8) + 's';
+        petal.style.animationName = 'petalFallCustom';
+        petal.style.setProperty('--sway-x', (Math.random() * 60 - 30) + 'px');
+        
+        petalsContainer.appendChild(petal);
+        
+        petal.addEventListener('animationend', () => {
+            petal.remove();
+            setTimeout(() => createSinglePetal(), Math.random() * 3000);
+        });
+    }
+
+    function init() {
+        loadTasksFromLocal();
+        renderTodoList();
+        setupEventDelegation();
+        setupDragAndDrop();
+        bindAddButton();
+        bindEnterKey();
+        bindClearButton();
+        createPetals();
+    }
+
+    init();
+</script>
+</body>
+</html>
